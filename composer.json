@@ -1,0 +1,62 @@
+{
+    "name": "gsebastiao/laravel-dynamic-menu",
+    "description": "Menus dinâmicos e hierárquicos (N níveis) para Laravel, com controlo de permissões flexível (none | string | id) e cache. 100% independente de qualquer pacote de permissões.",
+    "keywords": [
+        "laravel",
+        "menu",
+        "dynamic-menu",
+        "navigation",
+        "permissions",
+        "hierarchical",
+        "tree"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/gsebastiao/laravel-dynamic-menu",
+    "authors": [
+        {
+            "name": "Gsebastiao",
+            "homepage": "https://github.com/gsebastiao"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^2.0|^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gsebastiao\\DynamicMenu\\": "src/",
+            "Gsebastiao\\DynamicMenu\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Gsebastiao\\DynamicMenu\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gsebastiao\\DynamicMenu\\DynamicMenuServiceProvider"
+            ],
+            "aliases": {
+                "Menu": "Gsebastiao\\DynamicMenu\\Facades\\Menu"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
