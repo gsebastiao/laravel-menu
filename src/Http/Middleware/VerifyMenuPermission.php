@@ -2,43 +2,32 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Http\Middleware;
+namespace Gsebastiao\LaravelMenu\Http\Middleware;
 
 use Closure;
-use Gsebastiao\DynamicMenu\Services\MenuManager;
+use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Verifica se o utilizador possui uma permissão antes de deixar prosseguir.
+ * Só deixa passar quem tiver a permissão indicada (ou uma delas).
  *
- * Uso em rotas:
- *   Route::get('/admin', ...)->middleware('menu.permission:user.create');
+ *   Route::get('/utilizadores', ...)->middleware('menu.permission:users.view');
  *
- * No modo 'none' o middleware é um no-op (deixa passar sempre), o que permite
- * usar o mesmo código em projetos simples sem permissões.
+ *   // Várias permissões: basta ter UMA delas.
+ *   ->middleware('menu.permission:users.view,users.edit');
+ *   ->middleware('menu.permission:users.view|users.edit');
+ *
+ * No modo 'none' deixa passar sempre, por isso o mesmo código serve para
+ * projetos com e sem permissões. Quem não tiver permissão recebe um 403.
  */
 class VerifyMenuPermission
 {
-    public function __construct(protected MenuManager $manager)
+    public function __construct(protected MenuManager $manager) {}
+
+    public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
-    }
-
-    public function handle(Request $request, Closure $next, ?string $permission = null): Response
-    {
-        $mode = config('dynamic-menu.permission_mode', 'none');
-
-        // Sem permissões ou sem exigência específica: passa.
-        if ($mode === 'none' || $permission === null || $permission === '') {
-            return $next($request);
-        }
-
-        $userPermissions = array_map(
-            static fn ($p) => (string) $p,
-            $this->manager->resolveUserPermissions($request->user())
-        );
-
-        if (! in_array((string) $permission, $userPermissions, true)) {
+        if (! $this->manager->hasPermission($permissions, $request->user())) {
             abort(Response::HTTP_FORBIDDEN, 'Sem permissão para aceder a este recurso.');
         }
 

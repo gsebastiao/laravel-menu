@@ -1,53 +1,64 @@
 {
-    "name": "gsebastiao/laravel-dynamic-menu",
+    "name": "gsebastiao/laravel-menu",
     "description": "Menus dinâmicos e hierárquicos (N níveis) para Laravel, com controlo de permissões flexível (none | string | id) e cache. 100% independente de qualquer pacote de permissões.",
     "keywords": [
         "laravel",
         "menu",
-        "dynamic-menu",
         "navigation",
         "permissions",
         "hierarchical",
-        "tree"
+        "tree",
+        "blade"
     ],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/gsebastiao/laravel-dynamic-menu",
+    "homepage": "https://github.com/gsebastiao/laravel-menu",
     "authors": [
         {
-            "name": "Gsebastiao",
+            "name": "Gerson Sebastião Cossa",
+            "email": "gsebastiao@example.github.com",
             "homepage": "https://github.com/gsebastiao"
         }
     ],
     "require": {
         "php": "^8.2",
-        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0",
         "illuminate/database": "^11.0|^12.0|^13.0",
-        "illuminate/console": "^11.0|^12.0|^13.0"
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/routing": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/view": "^11.0|^12.0|^13.0"
     },
     "require-dev": {
+        "gsebastiao/laravel-auditable": "^1.0|^2.0",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
-        "pestphp/pest": "^2.0|^3.0",
-        "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+        "pestphp/pest": "^2.0|^3.0|^4.0|^5.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0|^4.0|^5.0"
+    },
+    "suggest": {
+        "gsebastiao/laravel-auditable": "Regista quem criou, editou, apagou ou restaurou cada item de menu. Depois de instalado, ativa com MENU_AUDITING_ENABLED=true."
     },
     "autoload": {
         "psr-4": {
-            "Gsebastiao\\DynamicMenu\\": "src/",
-            "Gsebastiao\\DynamicMenu\\Database\\Seeders\\": "database/seeders/"
+            "Gsebastiao\\LaravelMenu\\": "src/",
+            "Gsebastiao\\LaravelMenu\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Gsebastiao\\DynamicMenu\\Tests\\": "tests/"
+            "Gsebastiao\\LaravelMenu\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest"
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Gsebastiao\\DynamicMenu\\DynamicMenuServiceProvider"
+                "Gsebastiao\\LaravelMenu\\MenuServiceProvider"
             ],
             "aliases": {
-                "Menu": "Gsebastiao\\DynamicMenu\\Facades\\Menu"
+                "Menu": "Gsebastiao\\LaravelMenu\\Facades\\Menu"
             }
         }
     },

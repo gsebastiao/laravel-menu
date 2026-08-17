@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Tests;
+namespace Gsebastiao\LaravelMenu\Tests;
 
-use Gsebastiao\DynamicMenu\DynamicMenuServiceProvider;
+use Gsebastiao\LaravelMenu\MenuServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -18,9 +18,15 @@ abstract class TestCase extends Orchestra
 
     protected function getPackageProviders($app): array
     {
-        return [
-            DynamicMenuServiceProvider::class,
-        ];
+        $providers = [MenuServiceProvider::class];
+
+        // O Testbench não faz auto-discovery: quando o pacote de auditoria
+        // está instalado, é registado aqui para os testes de integração.
+        if (class_exists(\Gsebastiao\Auditable\AuditableServiceProvider::class)) {
+            array_unshift($providers, \Gsebastiao\Auditable\AuditableServiceProvider::class);
+        }
+
+        return $providers;
     }
 
     protected function defineEnvironment($app): void
@@ -34,8 +40,8 @@ abstract class TestCase extends Orchestra
             'prefix'   => '',
         ]);
 
-        // Cache em array por omissão nos testes (rápido e isolado).
+        // Cache em array nos testes (rápida e isolada).
         $config->set('cache.default', 'array');
-        $config->set('dynamic-menu.permission_mode', 'none');
+        $config->set('menu.permission_mode', 'none');
     }
 }

@@ -1,13 +1,32 @@
-/vendor
-/node_modules
+# Dependências instaladas pelo Composer. Um pacote não versiona o
+# composer.lock: quem o instala resolve as suas próprias versões.
+/vendor/
 composer.lock
-composer.phar
-.phpunit.cache
-.phpunit.result.cache
+
+# Testes (Orchestra Testbench / Pest). O phpunit.xml.dist é versionado;
+# um phpunit.xml local, se existir, sobrepõe-se a ele e não é versionado.
+/build/
+phpunit.xml
 .phpunit.cache/
-.idea
-.vscode
-.DS_Store
+.phpunit.result.cache
+
+# Artefactos comuns de IDEs
 *.log
-build/
-coverage/
+*.swp
+/.idea/
+/.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ficheiros locais de ambiente, caso alguém crie um para testar o pacote
+# isoladamente (ex.: um projeto Laravel de teste dentro do próprio repo)
+.env
+.env.backup
+
+# Ficheiros auxiliares de release (mensagens de commit/tag e comandos),
+# usados localmente e nunca versionados
+tag-msg.txt
+commit-msg.txt
+commit-code.txt

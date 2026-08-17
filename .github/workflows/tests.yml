@@ -15,12 +15,22 @@ jobs:
       matrix:
         php: ['8.2', '8.3', '8.4']
         laravel: ['11.*', '12.*', '13.*']
+        auditable: [true]
         exclude:
           # Laravel 13 exige PHP 8.3+ (não corre em 8.2)
           - laravel: '13.*'
             php: '8.2'
+        include:
+          # Também sem o pacote opcional gsebastiao/laravel-auditable,
+          # como numa instalação mínima.
+          - php: '8.2'
+            laravel: '11.*'
+            auditable: false
+          - php: '8.4'
+            laravel: '13.*'
+            auditable: false
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}${{ !matrix.auditable && ' - sem auditoria' || '' }}
 
     steps:
       - name: Checkout
@@ -32,6 +42,13 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mbstring, xml, curl, sqlite3, pdo_sqlite, bcmath
           coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Remove the optional auditing package
+        if: ${{ !matrix.auditable }}
+        run: composer remove gsebastiao/laravel-auditable --dev --no-interaction --no-update
 
       - name: Install dependencies
         run: |

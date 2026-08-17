@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Models;
+namespace Gsebastiao\LaravelMenu\Models;
 
-use Gsebastiao\DynamicMenu\Services\MenuManager;
+use Gsebastiao\LaravelMenu\Models\Concerns\AuditsWhenEnabled;
+use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
+ * Um item de menu. Os itens formam uma árvore através de `parent_id`.
+ *
  * @property int         $id
  * @property int|null    $parent_id
  * @property string      $name
@@ -29,9 +33,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class MenuItem extends Model
 {
+    use AuditsWhenEnabled;
     use SoftDeletes;
 
     protected $guarded = ['id'];
+
+    /**
+     * Valores por omissão, iguais aos da migration. Sem isto, um item acabado
+     * de criar com create() ficava com is_active = null em memória (a base de
+     * dados aplica o default, mas o model não o conhece) e isVisibleTo()
+     * devolvia false.
+     */
+    protected $attributes = [
+        'order'        => 0,
+        'is_active'    => true,
+        'is_separator' => false,
+    ];
 
     protected $casts = [
         'parent_id'    => 'integer',
@@ -41,14 +58,17 @@ class MenuItem extends Model
         'params'       => 'array',
     ];
 
+    /**
+     * Usa config('menu.table'), a menos que uma subclasse defina $table.
+     */
     public function getTable(): string
     {
-        return config('dynamic-menu.table', 'menu_items');
+        return $this->table ?? config('menu.table', 'menu_items');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Eventos: invalidação automática de cache
+    | Eventos: invalidação automática da cache
     |--------------------------------------------------------------------------
     */
 
@@ -58,16 +78,10 @@ class MenuItem extends Model
             app(MenuManager::class)->flushCache();
         };
 
+        // `deleted` também dispara no forceDelete().
         static::saved($flush);
         static::deleted($flush);
-
-        if (method_exists(static::class, 'restored')) {
-            static::restored($flush);
-        }
-
-        if (method_exists(static::class, 'forceDeleted')) {
-            static::forceDeleted($flush);
-        }
+        static::restored($flush);
     }
 
     /*
@@ -81,9 +95,12 @@ class MenuItem extends Model
         return $this->belongsTo(static::class, 'parent_id');
     }
 
+    /**
+     * Filhos diretos, pela mesma ordem usada na árvore (order, depois id).
+     */
     public function children(): HasMany
     {
-        return $this->hasMany(static::class, 'parent_id')->orderBy('order');
+        return $this->hasMany(static::class, 'parent_id')->ordered();
     }
 
     /**
@@ -112,7 +129,7 @@ class MenuItem extends Model
 
     public function scopeOrdered(Builder $query): Builder
     {
-        return $query->orderBy('order')->orderBy('id');
+        return $query->orderBy('order')->orderBy($this->getKeyName());
     }
 
     /*
@@ -122,36 +139,25 @@ class MenuItem extends Model
     */
 
     /**
-     * Indica se este item é visível dado o conjunto de permissões do
-     * utilizador. A interpretação depende de config('dynamic-menu.permission_mode').
+     * Este item é visível para alguém com estas permissões?
      *
-     * @param  array<int|string>  $userPermissions
+     * Um item inativo nunca é visível. Um item sem `permission` é visível para
+     * todos. No modo 'none', todos os itens ativos são visíveis.
+     *
+     * @param  iterable<mixed>  $userPermissions
      */
-    public function isVisibleTo(array $userPermissions): bool
+    public function isVisibleTo(iterable $userPermissions): bool
     {
         if (! $this->is_active) {
             return false;
         }
 
-        $mode = config('dynamic-menu.permission_mode', 'none');
-
-        // Separadores e itens sem permissão passam sempre.
-        if ($mode === 'none' || $this->permission === null || $this->permission === '') {
-            return true;
-        }
-
-        // Comparação por valor bruto (string ou id-como-texto).
-        // Normalizamos ambos os lados para string para uma comparação segura.
-        $needle = (string) $this->permission;
-
-        $haystack = array_map(static fn ($p) => (string) $p, $userPermissions);
-
-        return in_array($needle, $haystack, true);
+        return app(MenuManager::class)->matchesPermission($this->permission, $userPermissions);
     }
 
     /**
-     * Devolve o valor legível da permissão. No modo 'id', resolve contra a
-     * tabela configurada; caso contrário devolve a própria string.
+     * Nome legível da permissão. No modo 'id', lê-o da tabela configurada em
+     * config('menu.resolver'); nos outros modos devolve o próprio valor.
      */
     public function resolvedPermissionLabel(): ?string
     {
@@ -159,13 +165,13 @@ class MenuItem extends Model
             return null;
         }
 
-        if (config('dynamic-menu.permission_mode') !== 'id') {
+        if (app(MenuManager::class)->permissionMode() !== 'id') {
             return (string) $this->permission;
         }
 
-        $resolver = config('dynamic-menu.resolver');
+        $resolver = config('menu.resolver');
 
-        $value = \Illuminate\Support\Facades\DB::table($resolver['table'])
+        $value = DB::table($resolver['table'])
             ->where($resolver['key'], $this->permission)
             ->value($resolver['column']);
 

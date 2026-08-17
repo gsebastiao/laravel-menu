@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\LaravelMenu\Database\Seeders;
+namespace Database\Seeders;
 
 use Gsebastiao\LaravelMenu\Models\MenuItem;
 use Illuminate\Database\Seeder;
