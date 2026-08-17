@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Database\Seeders;
+namespace Gsebastiao\LaravelMenu\Database\Seeders;
 
-use Gsebastiao\DynamicMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Models\MenuItem;
 use Illuminate\Database\Seeder;
 
 class MenuItemsSeeder extends Seeder
@@ -12,7 +12,7 @@ class MenuItemsSeeder extends Seeder
     public function run(): void
     {
         /** @var class-string<MenuItem> $model */
-        $model = config('dynamic-menu.model', MenuItem::class);
+        $model = config('menu.model', MenuItem::class);
 
         // Dashboard (raiz, sem permissão -> visível a todos)
         $dashboard = $model::create([
@@ -90,7 +90,7 @@ class MenuItemsSeeder extends Seeder
         $model::create([
             'name'      => 'docs',
             'label'     => 'Documentação',
-            'route'     => 'https://github.com/gsebastiao/laravel-dynamic-menu',
+            'route'     => 'https://github.com/gsebastiao/laravel-menu',
             'icon'      => 'book',
             'order'     => 3,
             'target'    => '_blank',

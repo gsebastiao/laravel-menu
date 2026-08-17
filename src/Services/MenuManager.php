@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Services;
+namespace Gsebastiao\LaravelMenu\Services;
 
-use Gsebastiao\DynamicMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Models\MenuItem;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -59,7 +59,7 @@ class MenuManager
     public function buildTree(): Collection
     {
         /** @var class-string<MenuItem> $model */
-        $model = config('dynamic-menu.model', MenuItem::class);
+        $model = config('menu.model', MenuItem::class);
 
         $items = $model::query()
             ->active()
@@ -99,7 +99,7 @@ class MenuManager
      */
     protected function filterTree(Collection $tree, array $permissions): Collection
     {
-        $mode = config('dynamic-menu.permission_mode', 'none');
+        $mode = config('menu.permission_mode', 'none');
 
         return $tree
             ->map(function (array $node) use ($permissions, $mode) {
@@ -135,7 +135,7 @@ class MenuManager
         }
 
         $needle = (string) $permission;
-        $haystack = array_map(static fn ($p) => (string) $p, $permissions);
+        $haystack = array_map(static fn($p) => (string) $p, $permissions);
 
         return in_array($needle, $haystack, true);
     }
@@ -153,7 +153,7 @@ class MenuManager
     {
         $user ??= auth()->user();
 
-        $callback = config('dynamic-menu.user_permissions');
+        $callback = config('menu.user_permissions');
 
         if (is_callable($callback)) {
             $result = $callback($user);
@@ -183,8 +183,8 @@ class MenuManager
             return [];
         }
 
-        $mode = config('dynamic-menu.permission_mode', 'none');
-        $resolver = config('dynamic-menu.resolver');
+        $mode = config('menu.permission_mode', 'none');
+        $resolver = config('menu.resolver');
 
         return array_values(array_map(function ($p) use ($mode, $resolver) {
             // Objetos (ex.: models de permissão) -> extrai a coluna relevante.
@@ -231,7 +231,7 @@ class MenuManager
      */
     protected function put(Collection $tree): void
     {
-        $ttl = config('dynamic-menu.cache.ttl');
+        $ttl = config('menu.cache.ttl');
 
         if ($ttl === null) {
             $this->cache()->forever($this->cacheKey(), $tree->all());
@@ -244,18 +244,18 @@ class MenuManager
 
     protected function cache(): CacheRepository
     {
-        $store = config('dynamic-menu.cache.store');
+        $store = config('menu.cache.store');
 
         return $store ? Cache::store($store) : Cache::store();
     }
 
     protected function cacheEnabled(): bool
     {
-        return (bool) config('dynamic-menu.cache.enabled', true);
+        return (bool) config('menu.cache.enabled', true);
     }
 
     protected function cacheKey(): string
     {
-        return config('dynamic-menu.cache.key', 'dynamic_menu').':tree';
+        return config('menu.cache.key', 'laravel_menu') . ':tree';
     }
 }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Tests;
+namespace Gsebastiao\LaravelMenu\Tests;
 
-use Gsebastiao\DynamicMenu\DynamicMenuServiceProvider;
+use Gsebastiao\LaravelMenu\MenuServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -13,13 +13,13 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 
     protected function getPackageProviders($app): array
     {
         return [
-            DynamicMenuServiceProvider::class,
+            MenuServiceProvider::class,
         ];
     }
 
@@ -36,6 +36,6 @@ abstract class TestCase extends Orchestra
 
         // Cache em array por omissão nos testes (rápido e isolado).
         $config->set('cache.default', 'array');
-        $config->set('dynamic-menu.permission_mode', 'none');
+        $config->set('menu.permission_mode', 'none');
     }
 }

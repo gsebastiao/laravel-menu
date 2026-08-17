@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Http\Middleware;
+namespace Gsebastiao\LaravelMenu\Http\Middleware;
 
-use Closure;
-use Gsebastiao\DynamicMenu\Services\MenuManager;
-use Illuminate\Http\Request;
+use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Request;
+use Closure;
 
 /**
  * Verifica se o utilizador possui uma permissão antes de deixar prosseguir.
@@ -20,13 +20,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class VerifyMenuPermission
 {
-    public function __construct(protected MenuManager $manager)
-    {
-    }
+    public function __construct(protected MenuManager $manager) {}
 
     public function handle(Request $request, Closure $next, ?string $permission = null): Response
     {
-        $mode = config('dynamic-menu.permission_mode', 'none');
+        $mode = config('menu.permission_mode', 'none');
 
         // Sem permissões ou sem exigência específica: passa.
         if ($mode === 'none' || $permission === null || $permission === '') {
@@ -34,7 +32,7 @@ class VerifyMenuPermission
         }
 
         $userPermissions = array_map(
-            static fn ($p) => (string) $p,
+            static fn($p) => (string) $p,
             $this->manager->resolveUserPermissions($request->user())
         );
 

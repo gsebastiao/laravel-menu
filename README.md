@@ -1,12 +1,12 @@
-# Laravel Dynamic Menu
+# Laravel Menu
 
 Menus **dinâmicos e hierárquicos** (N níveis) para Laravel, com controlo de permissões **flexível** e cache para leitura rápida sem joins.
 
 O pacote é **100% independente**: não depende de Spatie nem de nenhum outro pacote de permissões. Podes usá-lo num projeto simples **sem permissões**, com **permissões por string**, ou apontando para **qualquer tabela** de permissões do teu projeto.
 
-[![tests](https://github.com/gsebastiao/laravel-dynamic-menu/actions/workflows/tests.yml/badge.svg)](https://github.com/gsebastiao/laravel-dynamic-menu/actions)
-[![Latest Version](https://img.shields.io/packagist/v/gsebastiao/laravel-dynamic-menu.svg)](https://packagist.org/packages/gsebastiao/laravel-dynamic-menu)
-[![License](https://img.shields.io/packagist/l/gsebastiao/laravel-dynamic-menu.svg)](LICENSE.md)
+[![tests](https://github.com/gsebastiao/laravel-menu/actions/workflows/tests.yml/badge.svg)](https://github.com/gsebastiao/laravel-menu/actions)
+[![Latest Version](https://img.shields.io/packagist/v/gsebastiao/laravel-menu.svg)](https://packagist.org/packages/gsebastiao/laravel-menu)
+[![License](https://img.shields.io/packagist/l/gsebastiao/laravel-menu.svg)](LICENSE)
 
 ---
 
@@ -45,13 +45,13 @@ O pacote é **100% independente**: não depende de Spatie nem de nenhum outro pa
 ## Instalação
 
 ```bash
-composer require gsebastiao/laravel-dynamic-menu
+composer require gsebastiao/laravel-menu
 ```
 
 Publica a configuração (opcional, mas recomendado):
 
 ```bash
-php artisan vendor:publish --tag=dynamic-menu-config
+php artisan vendor:publish --tag=laravel-menu-config
 ```
 
 Corre as migrations (a tabela `menu_items` é registada automaticamente pelo pacote):
@@ -63,7 +63,7 @@ php artisan migrate
 Se preferires **versionar/editar** a migration no teu projeto:
 
 ```bash
-php artisan vendor:publish --tag=dynamic-menu-migrations
+php artisan vendor:publish --tag=laravel-menu-migrations
 ```
 
 O Service Provider e a Facade `Menu` são registados automaticamente via package auto-discovery.
@@ -86,12 +86,12 @@ A mesma coluna carrega ora uma string ora um id — o config é que decide a lei
 
 ## Configuração
 
-Ficheiro `config/dynamic-menu.php` (resumo dos campos principais):
+Ficheiro `config/menu.php` (resumo dos campos principais):
 
 ```php
 return [
     // 'none' | 'string' | 'id'
-    'permission_mode' => env('DYNAMIC_MENU_PERMISSION_MODE', 'none'),
+    'permission_mode' => env('MENU_PERMISSION_MODE', 'none'),
 
     // Usado apenas no modo 'id'. Aponta para QUALQUER tabela do teu projeto.
     'resolver' => [
@@ -107,12 +107,12 @@ return [
     'cache' => [
         'enabled' => true,
         'store'   => null,   // null = store default (podes pôr 'redis')
-        'key'     => 'dynamic_menu',
+        'key'     => 'laravel_menu',
         'ttl'     => null,   // null = forever
     ],
 
     'table' => 'menu_items',
-    'model' => \Gsebastiao\DynamicMenu\Models\MenuItem::class,
+    'model' => \Gsebastiao\LaravelMenu\Models\MenuItem::class,
 ];
 ```
 
@@ -148,7 +148,7 @@ return [
 Devolve **todos** os itens ativos, já aninhados, servidos da cache (sem joins):
 
 ```php
-use Gsebastiao\DynamicMenu\Facades\Menu;
+use Gsebastiao\LaravelMenu\Facades\Menu;
 
 $tree = Menu::tree();
 // Collection de arrays; cada nó tem uma chave 'children' (array)
@@ -201,13 +201,13 @@ Cada nó é um array. Exemplo recursivo simples:
 
 ```blade
 {{-- No layout --}}
-@include('partials.menu', ['items' => \Gsebastiao\DynamicMenu\Facades\Menu::forUser()])
+@include('partials.menu', ['items' => \Gsebastiao\LaravelMenu\Facades\Menu::forUser()])
 ```
 
 ### Criar itens
 
 ```php
-use Gsebastiao\DynamicMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Models\MenuItem;
 
 $admin = MenuItem::create([
     'name'       => 'admin',
@@ -240,7 +240,7 @@ A cache é invalidada automaticamente sempre que gravas, apagas ou restauras um 
 Nada a configurar. O campo `permission` é ignorado, `Menu::tree()` e `Menu::forUser()` devolvem tudo, e o middleware deixa passar sempre. Ideal para projetos simples.
 
 ```php
-// config/dynamic-menu.php
+// config/menu.php
 'permission_mode' => 'none',
 ```
 
@@ -304,7 +304,7 @@ Route::get('/admin', [AdminController::class, 'index'])
 
 ## Cache
 
-A árvore é lida da cache, sem joins. Configura o store em `config/dynamic-menu.php`:
+A árvore é lida da cache, sem joins. Configura o store em `config/menu.php`:
 
 ```php
 'cache' => [
@@ -318,10 +318,10 @@ A cache é invalidada automaticamente em `saved` / `deleted` / `restored` do mod
 
 ```bash
 # Reconstruir a cache
-php artisan dynamic-menu:cache
+php artisan laravel-menu:cache
 
 # Apenas limpar
-php artisan dynamic-menu:cache --flush
+php artisan laravel-menu:cache --flush
 ```
 
 Ou por código:
@@ -338,7 +338,7 @@ Menu::flushCache();
 O pacote inclui um seeder de exemplo com uma hierarquia de várias profundidades. Publica-o e adapta:
 
 ```bash
-php artisan vendor:publish --tag=dynamic-menu-seeders
+php artisan vendor:publish --tag=laravel-menu-seeders
 ```
 
 Depois corre:
@@ -355,7 +355,7 @@ php artisan db:seed --class="Database\\Seeders\\MenuItemsSeeder"
 Ou usa diretamente o seeder do pacote sem publicar:
 
 ```bash
-php artisan db:seed --class="Gsebastiao\\DynamicMenu\\Database\\Seeders\\MenuItemsSeeder"
+php artisan db:seed --class="Gsebastiao\\LaravelMenu\\Database\\Seeders\\MenuItemsSeeder"
 ```
 
 ---
@@ -375,4 +375,4 @@ A suite cobre: montagem da árvore em N níveis, ordenação, cache e sua invali
 
 ## Licença
 
-MIT. Ver [LICENSE.md](LICENSE.md).
+MIT. Ver [LICENSE](LICENSE).

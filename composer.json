@@ -1,10 +1,9 @@
 {
-    "name": "gsebastiao/laravel-dynamic-menu",
+    "name": "gsebastiao/laravel-menu",
     "description": "Menus dinâmicos e hierárquicos (N níveis) para Laravel, com controlo de permissões flexível (none | string | id) e cache. 100% independente de qualquer pacote de permissões.",
     "keywords": [
         "laravel",
         "menu",
-        "dynamic-menu",
         "navigation",
         "permissions",
         "hierarchical",
@@ -12,7 +11,7 @@
     ],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/gsebastiao/laravel-dynamic-menu",
+    "homepage": "https://github.com/gsebastiao/laravel-menu",
     "authors": [
         {
             "name": "Gsebastiao",
@@ -32,22 +31,22 @@
     },
     "autoload": {
         "psr-4": {
-            "Gsebastiao\\DynamicMenu\\": "src/",
-            "Gsebastiao\\DynamicMenu\\Database\\Seeders\\": "database/seeders/"
+            "Gsebastiao\\LaravelMenu\\": "src/",
+            "Gsebastiao\\LaravelMenu\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Gsebastiao\\DynamicMenu\\Tests\\": "tests/"
+            "Gsebastiao\\LaravelMenu\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Gsebastiao\\DynamicMenu\\DynamicMenuServiceProvider"
+                "Gsebastiao\\LaravelMenu\\MenuServiceProvider"
             ],
             "aliases": {
-                "Menu": "Gsebastiao\\DynamicMenu\\Facades\\Menu"
+                "Menu": "Gsebastiao\\LaravelMenu\\Facades\\Menu"
             }
         }
     },

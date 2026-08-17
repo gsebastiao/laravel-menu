@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Facades;
+namespace Gsebastiao\LaravelMenu\Facades;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
@@ -15,12 +15,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static void flushCache()
  * @method static array resolveUserPermissions(mixed $user = null)
  *
- * @see \Gsebastiao\DynamicMenu\Services\MenuManager
+ * @see \Gsebastiao\LaravelMenu\Services\MenuManager
  */
 class Menu extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \Gsebastiao\DynamicMenu\Services\MenuManager::class;
+        return \Gsebastiao\LaravelMenu\Services\MenuManager::class;
     }
 }

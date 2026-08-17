@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gsebastiao\DynamicMenu\Models;
+namespace Gsebastiao\LaravelMenu\Models;
 
-use Gsebastiao\DynamicMenu\Services\MenuManager;
+use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,7 +43,7 @@ class MenuItem extends Model
 
     public function getTable(): string
     {
-        return config('dynamic-menu.table', 'menu_items');
+        return config('menu.table', 'menu_items');
     }
 
     /*
@@ -123,7 +123,7 @@ class MenuItem extends Model
 
     /**
      * Indica se este item é visível dado o conjunto de permissões do
-     * utilizador. A interpretação depende de config('dynamic-menu.permission_mode').
+     * utilizador. A interpretação depende de config('menu.permission_mode').
      *
      * @param  array<int|string>  $userPermissions
      */
@@ -133,7 +133,7 @@ class MenuItem extends Model
             return false;
         }
 
-        $mode = config('dynamic-menu.permission_mode', 'none');
+        $mode = config('menu.permission_mode', 'none');
 
         // Separadores e itens sem permissão passam sempre.
         if ($mode === 'none' || $this->permission === null || $this->permission === '') {
@@ -144,7 +144,7 @@ class MenuItem extends Model
         // Normalizamos ambos os lados para string para uma comparação segura.
         $needle = (string) $this->permission;
 
-        $haystack = array_map(static fn ($p) => (string) $p, $userPermissions);
+        $haystack = array_map(static fn($p) => (string) $p, $userPermissions);
 
         return in_array($needle, $haystack, true);
     }
@@ -159,11 +159,11 @@ class MenuItem extends Model
             return null;
         }
 
-        if (config('dynamic-menu.permission_mode') !== 'id') {
+        if (config('menu.permission_mode') !== 'id') {
             return (string) $this->permission;
         }
 
-        $resolver = config('dynamic-menu.resolver');
+        $resolver = config('menu.resolver');
 
         $value = \Illuminate\Support\Facades\DB::table($resolver['table'])
             ->where($resolver['key'], $this->permission)

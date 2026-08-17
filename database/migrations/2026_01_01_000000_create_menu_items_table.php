@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $table = config('dynamic-menu.table', 'menu_items');
+        $table = config('menu.table', 'menu_items');
 
         Schema::create($table, function (Blueprint $table) {
             $table->id();
@@ -30,7 +30,7 @@ return new class extends Migration
             // - modo 'none'   -> ignorada
             // - modo 'string' -> guarda a permissão como texto (ex.: user.create)
             // - modo 'id'     -> guarda o id (como texto) que aponta para a
-            //                    tabela definida em config('dynamic-menu.resolver')
+            //                    tabela definida em config('menu.resolver')
             $table->string('permission')->nullable()->index();
 
             // Comportamento e ordenação
@@ -53,6 +53,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists(config('dynamic-menu.table', 'menu_items'));
+        Schema::dropIfExists(config('menu.table', 'menu_items'));
     }
 };

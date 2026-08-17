@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Gsebastiao\DynamicMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Models\MenuItem;
 
 it('casta params para array e booleans corretamente', function () {
     $item = MenuItem::create([
@@ -40,7 +40,7 @@ it('suporta soft deletes', function () {
 });
 
 it('no modo none todos os itens são visíveis', function () {
-    config()->set('dynamic-menu.permission_mode', 'none');
+    config()->set('menu.permission_mode', 'none');
 
     $item = MenuItem::create(['name' => 'a', 'label' => 'A', 'permission' => 'qualquer.coisa']);
 
@@ -48,7 +48,7 @@ it('no modo none todos os itens são visíveis', function () {
 });
 
 it('no modo string filtra por permissão textual', function () {
-    config()->set('dynamic-menu.permission_mode', 'string');
+    config()->set('menu.permission_mode', 'string');
 
     $item = MenuItem::create(['name' => 'a', 'label' => 'A', 'permission' => 'user.create']);
 
@@ -57,7 +57,7 @@ it('no modo string filtra por permissão textual', function () {
 });
 
 it('itens sem permissão passam mesmo no modo string', function () {
-    config()->set('dynamic-menu.permission_mode', 'string');
+    config()->set('menu.permission_mode', 'string');
 
     $item = MenuItem::create(['name' => 'a', 'label' => 'A', 'permission' => null]);
 

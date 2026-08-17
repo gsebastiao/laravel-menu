@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Gsebastiao\DynamicMenu\Models\MenuItem;
-use Gsebastiao\DynamicMenu\Services\MenuManager;
+use Gsebastiao\LaravelMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
@@ -35,24 +35,24 @@ it('respeita a ordenação por order', function () {
 });
 
 it('guarda a árvore em cache e invalida ao gravar', function () {
-    config()->set('dynamic-menu.cache.enabled', true);
+    config()->set('menu.cache.enabled', true);
 
     MenuItem::create(['name' => 'a', 'label' => 'A']);
 
     // Primeira leitura -> popula cache
     manager()->tree();
-    expect(Cache::store('array')->has('dynamic_menu:tree'))->toBeTrue();
+    expect(Cache::store('array')->has('laravel_menu:tree'))->toBeTrue();
 
     // Novo item deve invalidar a cache automaticamente (evento saved)
     MenuItem::create(['name' => 'b', 'label' => 'B']);
-    expect(Cache::store('array')->has('dynamic_menu:tree'))->toBeFalse();
+    expect(Cache::store('array')->has('laravel_menu:tree'))->toBeFalse();
 
     // Releitura reflete o novo item
     expect(manager()->tree())->toHaveCount(2);
 });
 
 it('filtra a árvore pelas permissões do utilizador no modo string', function () {
-    config()->set('dynamic-menu.permission_mode', 'string');
+    config()->set('menu.permission_mode', 'string');
 
     MenuItem::create(['name' => 'public', 'label' => 'Público']);
     MenuItem::create(['name' => 'secret', 'label' => 'Secreto', 'permission' => 'secret.view']);
@@ -65,7 +65,7 @@ it('filtra a árvore pelas permissões do utilizador no modo string', function (
 });
 
 it('mantém o pai visível se tiver filhos visíveis', function () {
-    config()->set('dynamic-menu.permission_mode', 'string');
+    config()->set('menu.permission_mode', 'string');
 
     // Pai exige permissão que o user não tem, mas o filho é permitido.
     $parent = MenuItem::create(['name' => 'parent', 'label' => 'Pai', 'permission' => 'pai.only']);
@@ -88,9 +88,11 @@ it('resolve label de permissão no modo id contra a tabela configurada', functio
     $permId = \Illuminate\Support\Facades\DB::table('permissions')
         ->insertGetId(['name' => 'gerir.tudo']);
 
-    config()->set('dynamic-menu.permission_mode', 'id');
-    config()->set('dynamic-menu.resolver', [
-        'table' => 'permissions', 'key' => 'id', 'column' => 'name',
+    config()->set('menu.permission_mode', 'id');
+    config()->set('menu.resolver', [
+        'table' => 'permissions',
+        'key' => 'id',
+        'column' => 'name',
     ]);
 
     $item = MenuItem::create([
@@ -107,7 +109,7 @@ it('resolve label de permissão no modo id contra a tabela configurada', functio
 it('o comando artisan reconstrói a cache', function () {
     MenuItem::create(['name' => 'a', 'label' => 'A']);
 
-    $this->artisan('dynamic-menu:cache')
+    $this->artisan('laravel-menu:cache')
         ->expectsOutputToContain('Cache de menus reconstruída')
         ->assertSuccessful();
 });
@@ -116,9 +118,9 @@ it('o comando artisan --flush limpa a cache', function () {
     MenuItem::create(['name' => 'a', 'label' => 'A']);
     manager()->tree();
 
-    $this->artisan('dynamic-menu:cache', ['--flush' => true])
+    $this->artisan('laravel-menu:cache', ['--flush' => true])
         ->expectsOutputToContain('limpa com sucesso')
         ->assertSuccessful();
 
-    expect(Cache::store('array')->has('dynamic_menu:tree'))->toBeFalse();
+    expect(Cache::store('array')->has('laravel_menu:tree'))->toBeFalse();
 });

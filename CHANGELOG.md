@@ -8,6 +8,7 @@ e o projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 ## [1.0.0] - 2026-07-10
 
 ### Adicionado
+
 - Sistema de menus dinâmicos e hierárquicos com N níveis.
 - Model `MenuItem` com soft deletes, casts, scopes (`active`, `roots`, `ordered`)
   e relações de árvore (`parent`, `children`, `childrenRecursive`).
@@ -19,6 +20,6 @@ e o projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
   store), com invalidação automática em `saved`/`deleted`/`restored`.
 - Facade `Menu` (`tree`, `forUser`, `rebuildCache`, `flushCache`).
 - Middleware `menu.permission` para proteger rotas.
-- Comando `php artisan dynamic-menu:cache` (com `--flush`).
+- Comando `php artisan laravel-menu:cache` (com `--flush`).
 - Seeder de exemplo `MenuItemsSeeder`.
 - Testes automatizados (Pest) e CI para Laravel 11/12/13 em PHP 8.2–8.4.

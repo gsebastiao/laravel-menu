@@ -28,7 +28,7 @@ return [
     |
     */
 
-    'permission_mode' => env('DYNAMIC_MENU_PERMISSION_MODE', 'none'),
+    'permission_mode' => env('MENU_PERMISSION_MODE', 'none'),
 
     /*
     |--------------------------------------------------------------------------
@@ -47,9 +47,9 @@ return [
     */
 
     'resolver' => [
-        'table'  => env('DYNAMIC_MENU_RESOLVER_TABLE', 'permissions'),
-        'key'    => env('DYNAMIC_MENU_RESOLVER_KEY', 'id'),
-        'column' => env('DYNAMIC_MENU_RESOLVER_COLUMN', 'name'),
+        'key'    => env('MENU_RESOLVER_KEY', 'id'),
+        'column' => env('MENU_RESOLVER_COLUMN', 'name'),
+        'table'  => env('MENU_RESOLVER_TABLE', 'auth_permissions'),
     ],
 
     /*
@@ -87,10 +87,10 @@ return [
     */
 
     'cache' => [
-        'enabled' => env('DYNAMIC_MENU_CACHE_ENABLED', true),
-        'store'   => env('DYNAMIC_MENU_CACHE_STORE', null),
-        'key'     => 'dynamic_menu',
-        'ttl'     => env('DYNAMIC_MENU_CACHE_TTL', null),
+        'enabled' => env('MENU_CACHE_ENABLED', true),
+        'store'   => env('MENU_CACHE_STORE', null),
+        'ttl'     => env('MENU_CACHE_TTL', null),
+        'key'     => 'laravel_menu',
     ],
 
     /*
@@ -114,6 +114,6 @@ return [
     |
     */
 
-    'model' => \Gsebastiao\DynamicMenu\Models\MenuItem::class,
+    'model' => \Gsebastiao\LaravelMenu\Models\MenuItem::class,
 
 ];
