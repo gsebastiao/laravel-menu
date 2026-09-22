@@ -6,6 +6,8 @@
         "menu",
         "navigation",
         "permissions",
+        "authz",
+        "rbac",
         "hierarchical",
         "tree",
         "blade"
@@ -38,12 +40,14 @@
     },
     "require-dev": {
         "gsebastiao/laravel-auditable": "^1.0|^2.0",
+        "gsebastiao/laravel-authz": "^3.0",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "pestphp/pest": "^2.0|^3.0|^4.0|^5.0",
         "pestphp/pest-plugin-laravel": "^2.0|^3.0|^4.0|^5.0"
     },
     "suggest": {
-        "gsebastiao/laravel-auditable": "Regista quem criou, editou, apagou ou restaurou cada item de menu. Depois de instalado, ativa com MENU_AUDITING_ENABLED=true."
+        "gsebastiao/laravel-auditable": "Regista quem criou, editou, apagou ou restaurou cada item de menu. Depois de instalado, ativa com MENU_AUDITING_ENABLED=true.",
+        "gsebastiao/laravel-authz": "Grupos e permissões (RBAC). Uma vez instalado, o menu passa a esconder sozinho os itens que o utilizador não pode ver."
     },
     "autoload": {
         "psr-4": {

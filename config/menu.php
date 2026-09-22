@@ -38,6 +38,13 @@ return [
     |   key    -> coluna com o valor guardado em `permission` (normalmente 'id')
     |   column -> coluna com o nome legível da permissão (ex.: 'name')
     |
+    | Com o gsebastiao/laravel-authz, a tabela é a que já vem por omissão e a
+    | coluna do nome chama-se `permission` (ou `label`, para o nome amigável):
+    |
+    |   MENU_RESOLVER_TABLE=auth_permissions
+    |   MENU_RESOLVER_KEY=id
+    |   MENU_RESOLVER_COLUMN=permission
+    |
     */
 
     'resolver' => [
@@ -54,9 +61,18 @@ return [
     | Como o pacote descobre as permissões de quem está autenticado. É usado
     | por Menu::forUser(), Menu::hasPermission() e pelo middleware.
     |
-    |   null -> (padrão) usa $user->getAllPermissions() se o teu model User
-    |           tiver esse método (é o caso com spatie/laravel-permission);
-    |           caso contrário, o utilizador fica sem permissões.
+    |   null     -> (padrão, o mesmo que 'auto') descobre sozinho, por esta
+    |               ordem: gsebastiao/laravel-authz, depois
+    |               $user->getAllPermissions() (spatie/laravel-permission e
+    |               compatíveis). Sem nenhum deles, o utilizador fica sem
+    |               permissões.
+    |
+    |   'authz'  -> gsebastiao/laravel-authz. As permissões chegam já com a
+    |               cascata dele aplicada: negações individuais, regras dos
+    |               grupos, validade por datas e tenant atual. No modo 'id'
+    |               são lidos os ids; nos outros modos, os nomes.
+    |
+    |   'spatie' -> $user->getAllPermissions().
     |
     | Para usar a tua própria lógica, indica uma classe com o método
     | __invoke($user) que devolva os nomes (ou ids) das permissões:

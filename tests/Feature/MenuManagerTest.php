@@ -269,6 +269,35 @@ it('explica o erro quando config(menu.user_permissions) é inválida', function 
         ->toThrow(InvalidArgumentException::class, 'menu.user_permissions');
 });
 
+it('aceita uma fonte com nome na config, sem distinguir maiúsculas', function () {
+    config()->set('menu.permission_mode', 'string');
+
+    $user = new class
+    {
+        public function getAllPermissions()
+        {
+            return collect([(object) ['name' => 'users.view']]);
+        }
+    };
+
+    config()->set('menu.user_permissions', 'auto');
+    expect(manager()->resolveUserPermissions($user))->toBe(['users.view']);
+
+    config()->set('menu.user_permissions', ' SPATIE ');
+    expect(manager()->resolveUserPermissions($user))->toBe(['users.view']);
+});
+
+it("explica que a fonte 'spatie' precisa de getAllPermissions() no model", function () {
+    config()->set('menu.permission_mode', 'string');
+    config()->set('menu.user_permissions', 'spatie');
+
+    expect(fn () => manager()->resolveUserPermissions(new stdClass()))
+        ->toThrow(InvalidArgumentException::class, 'getAllPermissions()');
+
+    // Um visitante não tem permissões, e isso não é um erro de configuração.
+    expect(manager()->resolveUserPermissions(null))->toBe([]);
+});
+
 it('usa $user->getAllPermissions() quando não há resolver configurado', function () {
     config()->set('menu.permission_mode', 'string');
 

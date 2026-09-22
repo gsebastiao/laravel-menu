@@ -6,6 +6,7 @@ namespace Gsebastiao\LaravelMenu\Services;
 
 use BackedEnum;
 use Gsebastiao\LaravelMenu\Models\MenuItem;
+use Gsebastiao\LaravelMenu\Support\AuthzSupport;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -20,6 +21,17 @@ class MenuManager
 {
     /** Valores aceites em config('menu.permission_mode'). */
     public const MODES = ['none', 'string', 'id'];
+
+    /**
+     * Fontes de permissões com nome, aceites em config('menu.user_permissions')
+     * (MENU_USER_PERMISSION) em vez de uma classe:
+     *
+     *   'auto'   -> descobre sozinho (é o que acontece sem configuração):
+     *               laravel-authz, depois getAllPermissions() (Spatie).
+     *   'authz'  -> gsebastiao/laravel-authz.
+     *   'spatie' -> spatie/laravel-permission e compatíveis.
+     */
+    public const SOURCES = ['auto', 'authz', 'spatie'];
 
     /** Esquemas de URL que nunca viram link (evita `javascript:` num item). */
     protected const BLOCKED_SCHEMES = ['javascript', 'data', 'vbscript', 'file'];
@@ -444,8 +456,10 @@ class MenuManager
      *
      * Ordem de procura:
      *  1. o resolver definido com resolvePermissionsUsing();
-     *  2. config('menu.user_permissions');
-     *  3. $user->getAllPermissions(), se o método existir (ex.: Spatie);
+     *  2. config('menu.user_permissions'): uma fonte com nome (ver SOURCES)
+     *     ou uma classe;
+     *  3. sem nada configurado, descobre sozinho: primeiro o laravel-authz,
+     *     depois $user->getAllPermissions() (Spatie);
      *  4. nenhuma permissão.
      *
      * @return list<int|string>
@@ -454,21 +468,120 @@ class MenuManager
     {
         $user ??= auth()->user();
 
-        $resolver = $this->permissionsResolver ?? $this->configuredResolver();
+        if ($this->permissionsResolver !== null) {
+            return $this->normalizePermissions(($this->permissionsResolver)($user));
+        }
+
+        $source = $this->configuredSource();
+
+        if ($source !== null) {
+            return match ($source) {
+                'authz'  => $this->authzPermissions($user, explicit: true),
+                'spatie' => $this->spatiePermissions($user, explicit: true),
+                default  => $this->detectedPermissions($user),
+            };
+        }
+
+        $resolver = $this->configuredResolver();
 
         if ($resolver !== null) {
             return $this->normalizePermissions($resolver($user));
         }
 
+        return $this->detectedPermissions($user);
+    }
+
+    /**
+     * Sem resolver configurado: descobre o pacote de permissões em uso a
+     * partir do próprio model de utilizador, para que instalar o laravel-authz
+     * (ou o Spatie) baste para o menu começar a esconder o que deve.
+     *
+     * @return list<int|string>
+     */
+    protected function detectedPermissions(mixed $user): array
+    {
+        // 1. Model com o trait HasAuthz/HasPermissions do laravel-authz.
+        if (AuthzSupport::handles($user)) {
+            return $this->authzPermissions($user);
+        }
+
+        // 2. getAllPermissions(): spatie/laravel-permission e compatíveis.
         if (is_object($user) && method_exists($user, 'getAllPermissions')) {
             return $this->normalizePermissions($user->getAllPermissions());
+        }
+
+        // 3. laravel-authz instalado, mas sem o trait no model: lê pelo id.
+        if (AuthzSupport::available($user)) {
+            return $this->authzPermissions($user);
         }
 
         return [];
     }
 
     /**
+     * Permissões vindas do gsebastiao/laravel-authz, já com a cascata dele
+     * aplicada: negações individuais, regras dos grupos, validade por datas e
+     * tenant atual. No modo 'id' devolve ids; nos outros, nomes.
+     *
+     * @param  bool  $explicit  A fonte foi escolhida na config (e não detetada).
+     * @return list<int|string>
+     */
+    protected function authzPermissions(mixed $user, bool $explicit = false): array
+    {
+        if ($explicit) {
+            AuthzSupport::assertPackageInstalled();
+        }
+
+        return $this->normalizePermissions(AuthzSupport::permissionsFor($user, $this->permissionMode()));
+    }
+
+    /**
+     * Permissões vindas de $user->getAllPermissions(): o
+     * spatie/laravel-permission e qualquer model com esse método.
+     *
+     * @param  bool  $explicit  A fonte foi escolhida na config (e não detetada).
+     * @return list<int|string>
+     */
+    protected function spatiePermissions(mixed $user, bool $explicit = false): array
+    {
+        if (is_object($user) && method_exists($user, 'getAllPermissions')) {
+            return $this->normalizePermissions($user->getAllPermissions());
+        }
+
+        // Um visitante (null) não tem permissões, e isso não é um erro.
+        if ($explicit && $user !== null) {
+            throw new InvalidArgumentException(sprintf(
+                "config('menu.user_permissions') está definida como 'spatie' (MENU_USER_PERMISSION=spatie), mas o ".
+                'model %s não tem o método getAllPermissions(). Acrescenta-lhe o trait '.
+                "Spatie\\Permission\\Traits\\HasRoles, ou escolhe outra fonte de permissões.",
+                is_object($user) ? $user::class : get_debug_type($user),
+            ));
+        }
+
+        return [];
+    }
+
+    /**
+     * A fonte com nome escolhida em config('menu.user_permissions'), se for
+     * uma das de SOURCES ('auto', 'authz', 'spatie'). Qualquer outro valor
+     * (uma classe, um callable) é tratado pelo configuredResolver().
+     */
+    protected function configuredSource(): ?string
+    {
+        $source = config('menu.user_permissions');
+
+        if (! is_string($source)) {
+            return null;
+        }
+
+        $source = strtolower(trim($source));
+
+        return in_array($source, self::SOURCES, true) ? $source : null;
+    }
+
+    /**
      * Lê config('menu.user_permissions'). Aceita:
+     *  - uma fonte com nome:                    'auto', 'authz' ou 'spatie'
      *  - uma classe com __invoke($user):        App\Support\MenuPermissions::class
      *  - uma classe e um método:                [App\Support\MenuPermissions::class, 'resolve']
      *                                           ou 'App\Support\MenuPermissions@resolve'
@@ -496,8 +609,8 @@ class MenuManager
 
         if (! is_callable($resolver)) {
             throw new InvalidArgumentException(
-                "config('menu.user_permissions') não é válido. Usa null, uma classe com o método __invoke(\$user) ".
-                "(ex.: App\\Support\\MenuPermissions::class) ou [Classe::class, 'metodo']."
+                "config('menu.user_permissions') não é válido. Usa null, uma das fontes '".implode("', '", self::SOURCES)."', ".
+                "uma classe com o método __invoke(\$user) (ex.: App\\Support\\MenuPermissions::class) ou [Classe::class, 'metodo']."
             );
         }
 

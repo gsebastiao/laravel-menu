@@ -6,6 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [2.2.0] - 2026-09-22
+
+Versão focada em juntar o menu ao [gsebastiao/laravel-authz](https://github.com/gsebastiao/laravel-authz). Atualizar não exige mudanças no teu código.
+
+### Adicionado
+
+- **Suporte ao `gsebastiao/laravel-authz`.** Com esse pacote instalado, o menu passa a saber sozinho quais são as permissões de quem está autenticado: não escreves resolver nenhum. As permissões chegam com a cascata do laravel-authz já aplicada — negações individuais, regras dos grupos, validade por datas e tenant atual. No modo `string` são usados os nomes das permissões; no modo `id`, os ids. Funciona com o trait `HasAuthz` no model `User` e, se ele lá não estiver, pelo id do utilizador. Ver a secção [Com o gsebastiao/laravel-authz](README.md#com-o-gsebastiaolaravel-authz) do README.
+- `config('menu.user_permissions')` (`MENU_USER_PERMISSION`) passa a aceitar o nome de uma fonte, além de uma classe: `auto` (o padrão — descobre sozinho, primeiro o laravel-authz, depois o `getAllPermissions()` do Spatie), `authz` e `spatie`. Escolher `authz` sem o pacote instalado faz a aplicação parar no arranque com uma mensagem a explicar o que falta, tal como já acontecia com a auditoria.
+- `Gsebastiao\LaravelMenu\Support\AuthzSupport`: ponto único de verdade sobre esta integração opcional, a par do `AuditingSupport`. O laravel-menu continua a não depender de nenhum pacote de permissões e nunca carrega classes do laravel-authz sem ele instalado.
+
+### Atenção ao atualizar
+
+- Num projeto que já tenha o `gsebastiao/laravel-authz` instalado **e nenhum resolver de permissões configurado**, o menu deixa de esconder todos os itens com `permission` e passa a mostrar os que cada pessoa pode ver. Se tens um `Menu::resolvePermissionsUsing(...)` ou uma classe em `config('menu.user_permissions')`, nada muda: continuam a ter a última palavra.
+
+### Desenvolvimento
+
+- Testes: 82 → 95, a cobrir a deteção automática, o modo `id`, a cascata do laravel-authz, o middleware, o `resolvedPermissionLabel()` e a precedência entre as várias fontes de permissões.
+- CI: a coluna da matriz que corria sem o pacote de auditoria passa a correr sem **nenhum** dos pacotes opcionais, para cobrir também uma instalação mínima sem o laravel-authz.
+
 ## [2.1.2] - 2026-09-22
 
 Versão de correções. Não há passos de atualização: basta `composer update gsebastiao/laravel-menu`.
@@ -124,7 +143,8 @@ Primeira versão, publicada como `gsebastiao/laravel-dynamic-menu`.
 - Seeder de exemplo `MenuItemsSeeder`.
 - Testes automatizados (Pest) e CI para Laravel 11/12/13 em PHP 8.2–8.4.
 
-[Não lançado]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.2...HEAD
+[Não lançado]: https://github.com/gsebastiao/laravel-menu/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.2...v2.2.0
 [2.1.2]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/gsebastiao/laravel-menu/compare/v2.0.0...v2.1.0

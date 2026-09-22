@@ -8,6 +8,7 @@ use Gsebastiao\LaravelMenu\Console\Commands\RebuildMenuCacheCommand;
 use Gsebastiao\LaravelMenu\Http\Middleware\VerifyMenuPermission;
 use Gsebastiao\LaravelMenu\Services\MenuManager;
 use Gsebastiao\LaravelMenu\Support\AuditingSupport;
+use Gsebastiao\LaravelMenu\Support\AuthzSupport;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +29,10 @@ class MenuServiceProvider extends ServiceProvider
         // Auditoria ligada sem o pacote de auditoria instalado? Falha já, com
         // uma mensagem que diz o que fazer, em vez de não auditar nada.
         AuditingSupport::assertConfigured();
+
+        // Permissões apontadas ao laravel-authz sem o pacote instalado? Idem:
+        // mais vale falhar do que esconder o menu todo em silêncio.
+        AuthzSupport::assertConfigured();
 
         // A migration corre com `php artisan migrate`, mesmo sem a publicar.
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

@@ -26,6 +26,11 @@ abstract class TestCase extends Orchestra
             array_unshift($providers, \Gsebastiao\Auditable\AuditableServiceProvider::class);
         }
 
+        // O mesmo para o pacote de permissões (ver AuthzIntegrationTest).
+        if (class_exists(\Gsebastiao\LaravelAuthz\LaravelAuthzServiceProvider::class)) {
+            array_unshift($providers, \Gsebastiao\LaravelAuthz\LaravelAuthzServiceProvider::class);
+        }
+
         return $providers;
     }
 

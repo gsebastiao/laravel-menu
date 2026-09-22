@@ -8,7 +8,7 @@
 
 Menus para Laravel guardados na base de dados, com os níveis que precisares (menu › submenu › sub-submenu…), que mostram a cada utilizador só o que ele pode ver.
 
-- **Funciona sem nenhum pacote de permissões** — ou com o que já usas (Spatie, tabelas próprias, etc.).
+- **Funciona sem nenhum pacote de permissões** — ou com o que já usas: [gsebastiao/laravel-authz](https://github.com/gsebastiao/laravel-authz), Spatie, uma tabela tua.
 - **Rápido:** a árvore fica em cache e a cache limpa-se sozinha quando mudas um item.
 - **Pronto a mostrar:** um componente Blade desenha o menu com uma linha.
 
@@ -250,7 +250,9 @@ MENU_PERMISSION_MODE=string
 
 ### Passo 2: diz ao pacote quais são as permissões do utilizador
 
-**Usas o [spatie/laravel-permission](https://github.com/spatie/laravel-permission)?** Não precisas de fazer nada: o pacote usa `$user->getAllPermissions()` automaticamente.
+**Usas o [gsebastiao/laravel-authz](https://github.com/gsebastiao/laravel-authz)?** Não precisas de fazer nada: salta para [Com o gsebastiao/laravel-authz](#com-o-gsebastiaolaravel-authz).
+
+**Usas o [spatie/laravel-permission](https://github.com/spatie/laravel-permission)?** Também não: o pacote usa `$user->getAllPermissions()` automaticamente.
 
 **Tens outra lógica?** Define-a no `boot()` do `app/Providers/AppServiceProvider.php`:
 
@@ -293,6 +295,83 @@ class MenuPermissions
 
 </details>
 
+### Com o gsebastiao/laravel-authz
+
+O [gsebastiao/laravel-authz](https://github.com/gsebastiao/laravel-authz) traz grupos e permissões (RBAC) ao teu projeto. Com ele instalado, o menu **descobre-o sozinho** — não escreves resolver nenhum.
+
+**1. Instala e prepara o pacote** (se ainda não o fizeste):
+
+```bash
+composer require gsebastiao/laravel-authz
+php artisan authz:install
+```
+
+**2. Põe o trait no teu model `User`:**
+
+```php
+use Gsebastiao\LaravelAuthz\Traits\HasAuthz;
+
+class User extends Authenticatable
+{
+    use HasAuthz;
+}
+```
+
+**3. Escolhe o modo `string` e guarda o nome da permissão em cada item:**
+
+```env
+MENU_PERMISSION_MODE=string
+```
+
+```php
+MenuItem::create([
+    'name'       => 'users',
+    'label'      => 'Utilizadores',
+    'route'      => 'users.index',
+    'permission' => 'users.view',   // o nome da permissão, tal como está no laravel-authz
+]);
+```
+
+É tudo. A partir daqui cada pessoa só vê o que pode, **com a cascata do laravel-authz respeitada**: negações individuais, regras dos grupos, validade por datas e o tenant atual. A cache do menu guarda a árvore, não as permissões de cada pessoa — quem perde uma permissão deixa de ver o item logo no pedido seguinte.
+
+O middleware faz a mesma leitura, por isso a rota fica protegida com a mesma permissão que esconde o item:
+
+```php
+Route::get('/utilizadores', [UserController::class, 'index'])
+    ->middleware(['auth', 'menu.permission:users.view']);
+```
+
+<details>
+<summary>Guardar o <strong>id</strong> da permissão em vez do nome</summary>
+
+Se preferires que o campo `permission` guarde o id da permissão (sobrevive a uma mudança de nome), usa o modo `id`:
+
+```env
+MENU_RESOLVER_KEY=id
+MENU_PERMISSION_MODE=id
+MENU_RESOLVER_COLUMN=permission
+MENU_RESOLVER_TABLE=auth_permissions
+```
+
+`$item->resolvedPermissionLabel()` passa a devolver o nome da permissão, lido da tabela `auth_permissions`. Com `MENU_RESOLVER_COLUMN=label` recebes antes o nome amigável (ex.: «Ver utilizadores»), que costuma ser o que queres mostrar num painel de administração.
+
+</details>
+
+<details>
+<summary>Escolher a fonte das permissões em vez de a deixar ser descoberta</summary>
+
+Sem configuração, o pacote procura por esta ordem: laravel-authz, depois `$user->getAllPermissions()` (Spatie). Para não deixar nada ao acaso, diz qual é no `.env`:
+
+```env
+MENU_USER_PERMISSION=authz
+```
+
+Os valores aceites são `auto` (o padrão), `authz` e `spatie`. Se escolheres `authz` sem o pacote instalado, a aplicação pára no arranque com uma mensagem a explicar o que falta — em vez de esconder o menu todo em silêncio.
+
+Duas notas: se o teu model `User` não tiver o trait `HasAuthz`, o menu lê as permissões à mesma, pelo id do utilizador; e um `Menu::resolvePermissionsUsing(...)` que tenhas escrito continua a ter a última palavra sobre tudo isto.
+
+</details>
+
 ### Quem vê o quê
 
 | Situação | Resultado |
@@ -324,14 +403,15 @@ No modo `none`, `hasPermission()` devolve sempre `true`.
 Usa este modo se o campo `permission` guardar **ids** de uma tabela tua. Indica a tabela no `.env`:
 
 ```env
-MENU_PERMISSION_MODE=id
-MENU_RESOLVER_TABLE=permissions
 MENU_RESOLVER_KEY=id
+MENU_PERMISSION_MODE=id
 MENU_RESOLVER_COLUMN=name
+MENU_RESOLVER_TABLE=permissions
 ```
 
 - O resolver de permissões (passo 2) deve devolver os **ids** das permissões do utilizador.
 - `$item->resolvedPermissionLabel()` devolve o nome legível da permissão do item, lido dessa tabela (útil num painel de administração).
+- Com o gsebastiao/laravel-authz, os valores certos são `auth_permissions` / `id` / `permission` — ver [Com o gsebastiao/laravel-authz](#com-o-gsebastiaolaravel-authz).
 
 ---
 
@@ -456,8 +536,8 @@ Tudo funciona sem configurar nada, e **não precisas de publicar o ficheiro de c
 | `MENU_PERMISSION_MODE` | `none` | `none`, `string` ou `id` ([Permissões](#permissões)) |
 | `MENU_RESOLVER_TABLE` | `auth_permissions` | Tabela de permissões (só no modo `id`) |
 | `MENU_RESOLVER_KEY` | `id` | Coluna comparada com o campo `permission` (só no modo `id`) |
-| `MENU_RESOLVER_COLUMN` | `name` | Coluna com o nome legível da permissão |
-| `MENU_USER_PERMISSION` | (não definir) | Classe com `__invoke($user)` que devolve as permissões do utilizador |
+| `MENU_RESOLVER_COLUMN` | `name` | Coluna com o nome legível da permissão (com o laravel-authz: `permission` ou `label`) |
+| `MENU_USER_PERMISSION` | (não definir) | Fonte das permissões do utilizador: `auto` (o padrão), `authz`, `spatie`, ou uma classe com `__invoke($user)` |
 | `MENU_CACHE_ENABLED` | `true` | Liga/desliga a cache |
 | `MENU_CACHE_STORE` | (não definir) | Cache a usar (sem valor = a padrão da aplicação) |
 | `MENU_CACHE_TTL` | (não definir) | Validade da cache em segundos (sem valor ou 0 = sem prazo) |
@@ -522,6 +602,9 @@ Tudo o que podes publicar:
 **O menu aparece vazio.**
 Confirma que há itens com `is_active = true`. Se usas permissões, vê o que o pacote recebe com `dd(Menu::resolveUserPermissions())` — se vier vazio, revê o [passo 2 das permissões](#passo-2-diz-ao-pacote-quais-são-as-permissões-do-utilizador).
 
+**Instalei o gsebastiao/laravel-authz e o menu continua vazio.**
+Confirma três coisas: o `MENU_PERMISSION_MODE` está em `string` (ou em `id`, se guardares ids); o campo `permission` de cada item é **exatamente** igual ao nome da permissão no `auth_permissions` (a comparação distingue maiúsculas de minúsculas); e a permissão chega mesmo ao utilizador — `dd(Menu::resolveUserPermissions())` mostra o que o pacote está a ver.
+
 **Alterei itens e o menu não mudou.**
 Provavelmente alteraste-os sem passar pelos eventos do model (update em massa, SQL direto…). Corre `php artisan laravel-menu:cache`. Ver [Cache](#cache).
 
@@ -556,6 +639,10 @@ O `MENU_PERMISSION_MODE` tem um valor desconhecido (ex.: `strings`). Usa `none`,
 ---
 
 ## Atualizar de uma versão anterior
+
+### De 2.1 para 2.2
+
+Não há passos obrigatórios. Uma única coisa a rever: se já tens o **gsebastiao/laravel-authz** instalado e **não** configuraste nenhum resolver de permissões, o menu deixa de esconder todos os itens com `permission` e passa a mostrar os que cada pessoa pode ver — ver [Com o gsebastiao/laravel-authz](#com-o-gsebastiaolaravel-authz). Se tens um `Menu::resolvePermissionsUsing(...)` ou uma classe em `config('menu.user_permissions')`, nada muda.
 
 ### De 2.0 para 2.1
 
