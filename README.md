@@ -1,6 +1,6 @@
 # Laravel Menu
 
-[![License](https://img.shields.io/packagist/l/gsebastiao/laravel-menu.svg)](LICENSE.md)
+[![License](https://img.shields.io/packagist/l/gsebastiao/laravel-menu.svg)](LICENSE)
 [![PHP Version](https://img.shields.io/packagist/php-v/gsebastiao/laravel-menu.svg)](composer.json)
 [![Laravel Framework](https://img.shields.io/packagist/dependency-v/gsebastiao/laravel-menu/illuminate/support.svg)](composer.json)
 [![Latest Version](https://img.shields.io/packagist/v/gsebastiao/laravel-menu.svg)](https://packagist.org/packages/gsebastiao/laravel-menu)
@@ -197,6 +197,8 @@ O HTML gerado usa estas classes, para poderes dar-lhe o estilo que quiseres:
 | `menu-link`       | o `<a>` de cada item (sem `href` quando o item não tem link) |
 | `menu-icon`, `menu-label`, `menu-badge` | o ícone, o texto e o badge |
 | `menu-separator`  | o `<li>` de um separador |
+
+Além das classes, o `<a>` da página atual leva `aria-current="page"`, para que um leitor de ecrã a anuncie. Só esse: os itens-pai ficam apenas com a classe `is-active`.
 
 ### Mudar o HTML do componente
 
@@ -498,6 +500,7 @@ Tudo o que podes publicar:
 | `Menu::resolvePermissionsUsing(fn ($user) => ...)` | Define como obter as permissões do utilizador. |
 | `Menu::resolveUserPermissions($user = null)` | As permissões do utilizador, tal como o pacote as vê (útil para depurar). |
 | `Menu::rebuildCache()` / `Menu::flushCache()` | Reconstrói / limpa a cache. |
+| `Menu::cacheEnabled()` | A cache está ligada? (o mesmo que `config('menu.cache.enabled')`, com o padrão aplicado). |
 
 **Model `MenuItem`:**
 

@@ -71,6 +71,31 @@ it('aceita itens próprios e atributos para a <ul>', function () {
         ->assertSee('href="http://localhost"', false);
 });
 
+it('desenha itens próprios a que falte o label, sem rebentar', function () {
+    // :items aceita arrays do utilizador; um `label` em falta dava
+    // "Undefined array key" e deitava a página abaixo.
+    $itens = [['name' => 'a', 'route' => '/', 'children' => []]];
+
+    $this->blade('<x-laravel-menu::menu :items="$itens" />', ['itens' => $itens])
+        ->assertSee('<span class="menu-label"></span>', false);
+});
+
+it('marca com aria-current só a página atual, não os pais dela', function () {
+    Route::get('/pagina', fn () => Blade::render('<x-laravel-menu::menu />'))->name('pagina');
+    app('router')->getRoutes()->refreshNameLookups();
+
+    $grupo = MenuItem::create(['name' => 'grupo', 'label' => 'Grupo', 'route' => 'users.index']);
+    MenuItem::create(['name' => 'pagina', 'label' => 'Página', 'route' => 'pagina', 'parent_id' => $grupo->id]);
+
+    $html = $this->get('/pagina')->getContent();
+
+    expect(substr_count($html, 'aria-current="page"'))->toBe(1)
+        ->and($html)->toContain('aria-current="page"');
+
+    // O pai fica destacado (is-active), mas não é a página atual.
+    expect(substr_count($html, 'is-active'))->toBe(2);
+});
+
 it('escapa o texto dos itens', function () {
     MenuItem::create(['name' => 'x', 'label' => '<script>alert(1)</script>']);
 

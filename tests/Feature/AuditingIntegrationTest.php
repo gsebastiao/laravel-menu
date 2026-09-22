@@ -14,13 +14,21 @@ use Illuminate\Support\Facades\DB;
 $semPacote = ! AuditingSupport::packageInstalled();
 
 /**
- * Cria a tabela de auditoria a partir da migration (stub) do pacote.
+ * Cria a tabela de auditoria a partir da migration do pacote instalado.
+ *
+ * O nome do ficheiro mudou entre versões do laravel-auditable (a 1.x trazia
+ * `create_audits_table.php.stub`, a 2.x traz uma migration datada), por isso
+ * é procurado em vez de escrito à mão.
  */
 function criarTabelaDeAuditoria(): void
 {
     $path = InstalledVersions::getInstallPath(AuditingSupport::PACKAGE_NAME);
 
-    (require $path.'/database/migrations/create_audits_table.php.stub')->up();
+    $ficheiros = glob($path.'/database/migrations/*create_audits_table.php*') ?: [];
+
+    expect($ficheiros)->not->toBeEmpty();
+
+    (require $ficheiros[0])->up();
 }
 
 /**

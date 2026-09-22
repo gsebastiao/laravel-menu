@@ -28,9 +28,12 @@ it('pode ser corrido várias vezes sem duplicar itens', function () {
 it('publica o seeder com o namespace Database\Seeders', function () {
     $paths = ServiceProvider::pathsToPublish(MenuServiceProvider::class, 'laravel-menu-seeders');
 
+    // database_path() usa a barra do sistema: no Windows vem \, no Linux /.
+    $barras = static fn (string $caminho): string => str_replace('\\', '/', $caminho);
+
     expect($paths)->toHaveCount(1)
-        ->and(array_key_first($paths))->toEndWith('stubs/MenuItemsSeeder.php.stub')
-        ->and(array_values($paths)[0])->toEndWith('database/seeders/MenuItemsSeeder.php')
+        ->and($barras(array_key_first($paths)))->toEndWith('stubs/MenuItemsSeeder.php.stub')
+        ->and($barras(array_values($paths)[0]))->toEndWith('database/seeders/MenuItemsSeeder.php')
         ->and(file_get_contents(array_key_first($paths)))->toContain("namespace Database\\Seeders;\n");
 });
 

@@ -13,6 +13,11 @@
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/gsebastiao/laravel-menu",
+    "support": {
+        "issues": "https://github.com/gsebastiao/laravel-menu/issues",
+        "source": "https://github.com/gsebastiao/laravel-menu",
+        "docs": "https://github.com/gsebastiao/laravel-menu#readme"
+    },
     "authors": [
         {
             "name": "Gerson Sebastião Cossa",
@@ -22,7 +27,9 @@
     ],
     "require": {
         "php": "^8.2",
+        "illuminate/cache": "^11.0|^12.0|^13.0",
         "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
         "illuminate/database": "^11.0|^12.0|^13.0",
         "illuminate/http": "^11.0|^12.0|^13.0",
         "illuminate/routing": "^11.0|^12.0|^13.0",

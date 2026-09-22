@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Gsebastiao\LaravelMenu\Facades\Menu;
 use Gsebastiao\LaravelMenu\Models\MenuItem;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,37 @@ it('devolve null para um nome de rota que não existe, em vez de rebentar', func
 
 it('devolve null se faltarem parâmetros obrigatórios da rota', function () {
     expect(Menu::url(['route' => 'users.edit']))->toBeNull();
+});
+
+it('não enche o log quando faltam parâmetros obrigatórios da rota', function () {
+    $reportadas = [];
+
+    app()->instance(ExceptionHandler::class, new class($reportadas) implements ExceptionHandler
+    {
+        public function __construct(private array &$reportadas) {}
+
+        public function report(Throwable $e): void
+        {
+            $this->reportadas[] = $e::class;
+        }
+
+        public function shouldReport(Throwable $e): bool
+        {
+            return true;
+        }
+
+        public function render($request, Throwable $e)
+        {
+            throw $e;
+        }
+
+        public function renderForConsole($output, Throwable $e): void {}
+    });
+
+    // Um item mal configurado é desenhado em cada página: se cada desenho
+    // escrevesse uma exceção no log, o log ficava inutilizável.
+    expect(Menu::url(['route' => 'users.edit']))->toBeNull()
+        ->and($reportadas)->toBe([]);
 });
 
 it('aceita caminhos, endereços completos e âncoras', function () {

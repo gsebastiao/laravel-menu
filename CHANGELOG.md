@@ -2,9 +2,40 @@
 
 Todas as alterações relevantes deste pacote ficam registadas neste ficheiro.
 
-O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/): uma versão **MAJOR** (3.0.0) pode exigir mudanças no teu código, uma **MINOR** (2.1.0) acrescenta funcionalidades sem as exigir e uma **PATCH** (2.1.1) só corrige bugs.
+O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/): uma versão **MAJOR** (3.0.0) pode exigir mudanças no teu código, uma **MINOR** (2.1.0) acrescenta funcionalidades sem as exigir e uma **PATCH** (2.1.2) só corrige bugs.
 
 ## [Não lançado]
+
+## [2.1.2] - 2026-09-22
+
+Versão de correções. Não há passos de atualização: basta `composer update gsebastiao/laravel-menu`.
+
+> A **2.1.1** foi etiquetada por engano no mesmo commit da 2.1.0, por isso tem exatamente o mesmo código. Quem está na 2.1.0 ou na 2.1.1 tem as mesmas correções por fazer: atualiza para a 2.1.2.
+
+### Corrigido
+
+- Um item cuja rota exige um parâmetro que não está em `params` (ex.: `users.edit` sem `['user' => 5]`) continuava a aparecer sem link, como está documentado, mas escrevia a exceção no log **em cada pedido**. Um único item mal configurado enchia o log da aplicação.
+- `$item->resolvedPermissionLabel()` dava `Undefined array key` quando o `config/menu.php` publicado não tinha todas as chaves de `resolver`. Agora usa os mesmos valores por omissão do ficheiro de configuração (`auth_permissions`, `id`, `name`), tal como o resto do pacote já fazia.
+- O componente Blade rebentava com `Undefined array key "label"` quando lhe passavam em `:items` itens próprios sem `label`. Agora desenha-os com o texto vazio.
+- `php artisan laravel-menu:cache` dizia "Cache de menus reconstruída" mesmo com `MENU_CACHE_ENABLED=false`, quando na verdade nada tinha sido guardado. Passa a avisar que a cache está desligada.
+- Componente Blade: a página atual não era identificada para leitores de ecrã. O link da página atual passa a levar `aria-current="page"` — só ele, e não os itens-pai, que continuam apenas com a classe `is-active`.
+- `:items` aceita agora qualquer iterable (antes, um generator rebentava com `count()`).
+- `composer.json`: `illuminate/cache` e `illuminate/contracts` passam a estar declarados; já eram usados (`Cache::store()` e o contrato `Repository`) sem constarem do `require`.
+
+### Adicionado
+
+- `Menu::cacheEnabled()`: diz se a cache está ligada, sem repetir a leitura da configuração. É o que o comando usa para dar o aviso acima.
+
+### Desenvolvimento
+
+- Testes: 77 → 82, com um teste por cada correção.
+- O teste do seeder comparava caminhos com `/`, por isso falhava no Windows; passa a normalizar as barras.
+- O teste de integração com o `gsebastiao/laravel-auditable` procurava a migration pelo nome que ela tinha na 1.x e falhava com a 2.x, que o pacote já aceita. Passa a encontrá-la em qualquer das duas.
+- CI: o `laravel/framework` da matriz passa a ser instalado como dependência de desenvolvimento.
+
+## [2.1.1] - 2026-09-19
+
+Etiquetada por engano no mesmo commit da 2.1.0: **o código é exatamente o mesmo**. Não traz nada de novo nem corrige nada. Se estás nesta versão, atualiza para a 2.1.2.
 
 ## [2.1.0] - 2026-09-19
 
@@ -93,7 +124,9 @@ Primeira versão, publicada como `gsebastiao/laravel-dynamic-menu`.
 - Seeder de exemplo `MenuItemsSeeder`.
 - Testes automatizados (Pest) e CI para Laravel 11/12/13 em PHP 8.2–8.4.
 
-[Não lançado]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.0...HEAD
+[Não lançado]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.2...HEAD
+[2.1.2]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.1...v2.1.2
+[2.1.1]: https://github.com/gsebastiao/laravel-menu/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/gsebastiao/laravel-menu/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/gsebastiao/laravel-menu/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/gsebastiao/laravel-menu/releases/tag/v1.0.0

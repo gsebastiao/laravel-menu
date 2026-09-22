@@ -25,6 +25,17 @@ class RebuildMenuCacheCommand extends Command
 
         $tree = $manager->rebuildCache();
 
+        if (! $manager->cacheEnabled()) {
+            // Sem este aviso, o comando dizia "reconstruída" e a cache
+            // continuava desligada — e a culpa do menu lento ficava por achar.
+            $this->warn(
+                'A cache está desligada (MENU_CACHE_ENABLED=false): nada foi guardado. '.
+                'Liga-a para o menu deixar de ir à base de dados em cada página.'
+            );
+
+            return self::SUCCESS;
+        }
+
         $this->info(sprintf(
             'Cache de menus reconstruída: %d item(ns) de raiz.',
             $tree->count()

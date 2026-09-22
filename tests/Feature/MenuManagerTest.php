@@ -192,6 +192,24 @@ it('resolve label de permissão no modo id contra a tabela configurada', functio
         ->and($item->isVisibleTo([999]))->toBeFalse();
 });
 
+it('resolve label de permissão com um config resolver incompleto', function () {
+    Schema::create('auth_permissions', function ($table) {
+        $table->id();
+        $table->string('name');
+    });
+
+    $permId = DB::table('auth_permissions')->insertGetId(['name' => 'gerir.tudo']);
+
+    // Um config/menu.php publicado a que falte 'key' ou 'column' dava
+    // "Undefined array key" em vez de usar os valores por omissão.
+    config()->set('menu.permission_mode', 'id');
+    config()->set('menu.resolver', ['table' => 'auth_permissions']);
+
+    $item = MenuItem::create(['name' => 'a', 'label' => 'A', 'permission' => (string) $permId]);
+
+    expect($item->resolvedPermissionLabel())->toBe('gerir.tudo');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Modo de permissão
@@ -360,6 +378,19 @@ it('o comando artisan reconstrói a cache', function () {
         ->assertSuccessful();
 
     expect(Cache::store('array')->has('laravel_menu:tree'))->toBeTrue();
+});
+
+it('o comando artisan avisa quando a cache está desligada', function () {
+    config()->set('menu.cache.enabled', false);
+    MenuItem::create(['name' => 'a', 'label' => 'A']);
+
+    // Dizer "reconstruída" com a cache desligada mandava quem procurava um
+    // menu lento investigar tudo menos a causa.
+    $this->artisan('laravel-menu:cache')
+        ->expectsOutputToContain('A cache está desligada')
+        ->assertSuccessful();
+
+    expect(Cache::store('array')->has('laravel_menu:tree'))->toBeFalse();
 });
 
 it('o comando artisan --flush limpa a cache', function () {

@@ -244,10 +244,14 @@ class MenuManager
         if (Route::has($target)) {
             $params = data_get($item, 'params');
 
-            return rescue(
-                static fn () => route($target, is_array($params) ? $params : []),
-                null,
-            );
+            try {
+                return route($target, is_array($params) ? $params : []);
+            } catch (Throwable) {
+                // Falta um parâmetro obrigatório da rota: o item fica sem link.
+                // Não é reportado ao log: senão um único item mal configurado
+                // escrevia uma exceção em cada pedido.
+                return null;
+            }
         }
 
         if (str_starts_with($target, '#')) {
@@ -658,7 +662,11 @@ class MenuManager
         return $store ? Cache::store($store) : Cache::store();
     }
 
-    protected function cacheEnabled(): bool
+    /**
+     * A cache está ligada? Útil para avisar (em vez de enganar) quando se
+     * manda reconstruir uma cache que está desligada.
+     */
+    public function cacheEnabled(): bool
     {
         return (bool) config('menu.cache.enabled', true);
     }

@@ -13,10 +13,12 @@
 @props(['items' => null])
 
 @php
-    $items ??= Menu::forUser();
+    // collect() aceita arrays, Collections e qualquer iterable (um generator
+    // passado em :items rebentava com count()).
+    $items = collect($items ?? Menu::forUser());
 @endphp
 
-@if (count($items) > 0)
+@if ($items->isNotEmpty())
     <ul {{ $attributes->merge(['class' => 'menu']) }}>
         @foreach ($items as $item)
             @if ($item['is_separator'] ?? false)
@@ -28,22 +30,28 @@
                 $url = Menu::url($item);
                 $children = $item['children'] ?? [];
                 $target = $url ? ($item['target'] ?? null) : null;
+                $active = Menu::isActive($item);
+
+                // Ativo por causa de um filho = antepassado, não a página atual:
+                // só a página atual leva aria-current.
+                $current = $active && ! collect($children)->contains(fn ($child) => Menu::isActive($child));
             @endphp
 
             <li @class([
                 'menu-item',
-                'is-active' => Menu::isActive($item),
+                'is-active' => $active,
                 'has-children' => count($children) > 0,
             ])>
                 <a class="menu-link"
                    @if ($url) href="{{ $url }}" @endif
+                   @if ($url && $current) aria-current="page" @endif
                    @if ($target) target="{{ $target }}" @endif
                    @if ($target === '_blank') rel="noopener noreferrer" @endif
                    @if (filled($item['description'] ?? null)) title="{{ $item['description'] }}" @endif>
                     @if (filled($item['icon'] ?? null))
                         <i class="menu-icon {{ $item['icon'] }}" aria-hidden="true"></i>
                     @endif
-                    <span class="menu-label">{{ $item['label'] }}</span>
+                    <span class="menu-label">{{ $item['label'] ?? '' }}</span>
                     @if (filled($item['badge'] ?? null))
                         <span class="menu-badge">{{ $item['badge'] }}</span>
                     @endif

@@ -169,11 +169,13 @@ class MenuItem extends Model
             return (string) $this->permission;
         }
 
-        $resolver = config('menu.resolver');
+        // Os mesmos valores por omissão do config/menu.php, para que um
+        // config publicado a que falte uma chave não dê "Undefined array key".
+        $resolver = (array) config('menu.resolver', []);
 
-        $value = DB::table($resolver['table'])
-            ->where($resolver['key'], $this->permission)
-            ->value($resolver['column']);
+        $value = DB::table($resolver['table'] ?? 'auth_permissions')
+            ->where($resolver['key'] ?? 'id', $this->permission)
+            ->value($resolver['column'] ?? 'name');
 
         return $value !== null ? (string) $value : null;
     }

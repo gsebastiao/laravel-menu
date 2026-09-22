@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array resolveUserPermissions(mixed $user = null)
  * @method static \Illuminate\Support\Collection rebuildCache()
  * @method static void flushCache()
+ * @method static bool cacheEnabled()
  *
  * @see \Gsebastiao\LaravelMenu\Services\MenuManager
  */
